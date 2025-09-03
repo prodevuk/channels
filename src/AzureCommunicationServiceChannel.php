@@ -10,9 +10,9 @@ class AzureCommunicationServiceChannel
 {
     protected $client;
 
-    public function __construct(AzureCommunicationServiceClient $client)
+    public function __construct(AzureCommunicationServiceClient $client = null)
     {
-        $this->client = $client;
+        $this->client = $client ?: app(AzureCommunicationServiceClient::class);
     }
 
     /**
