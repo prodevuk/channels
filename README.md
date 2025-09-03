@@ -72,12 +72,19 @@ AZURE_COMMUNICATION_SMS_SENDER=+1234567890
 
 ## Usage
 
-### Sending Email Notifications
+The channel supports three different notification methods:
+
+1. **Combined notifications** - Send both email and SMS using `toAzureCommunication()`
+2. **Email-only notifications** - Send only email using `toEmail()`
+3. **SMS-only notifications** - Send only SMS using `toSms()`
+
+### Combined Email and SMS Notifications
 
 ```php
 use Illuminate\Notifications\Notification;
 use NotificationChannels\ProdevelUK\AzureCommunicationServiceChannel;
 use NotificationChannels\ProdevelUK\AzureCommunicationServiceEmailMessage;
+use NotificationChannels\ProdevelUK\AzureCommunicationServiceSmsMessage;
 
 class OrderShipped extends Notification
 {
@@ -93,28 +100,7 @@ class OrderShipped extends Notification
                 'subject' => 'Your Order Has Shipped',
                 'html' => '<h1>Order Shipped!</h1><p>Your order has been shipped and will arrive soon.</p>',
                 'text' => 'Order Shipped! Your order has been shipped and will arrive soon.',
-            ]
-        ];
-    }
-}
-```
-
-### Sending SMS Notifications
-
-```php
-use Illuminate\Notifications\Notification;
-use NotificationChannels\ProdevelUK\AzureCommunicationServiceChannel;
-
-class OrderShipped extends Notification
-{
-    public function via($notifiable)
-    {
-        return [AzureCommunicationServiceChannel::class];
-    }
-
-    public function toAzureCommunication($notifiable)
-    {
-        return [
+            ],
             'sms' => [
                 'message' => 'Your order has been shipped! Track it at: https://example.com/track/12345'
             ]
@@ -123,7 +109,53 @@ class OrderShipped extends Notification
 }
 ```
 
-### Sending Both Email and SMS
+### Email-Only Notifications
+
+```php
+use Illuminate\Notifications\Notification;
+use NotificationChannels\ProdevelUK\AzureCommunicationServiceChannel;
+
+class EmailOnlyNotification extends Notification
+{
+    public function via($notifiable)
+    {
+        return [AzureCommunicationServiceChannel::class];
+    }
+
+    public function toEmail($notifiable)
+    {
+        return [
+            'subject' => 'Welcome to our service',
+            'html' => '<h1>Welcome!</h1><p>Thank you for joining us.</p>',
+            'text' => 'Welcome! Thank you for joining us.',
+        ];
+    }
+}
+```
+
+### SMS-Only Notifications
+
+```php
+use Illuminate\Notifications\Notification;
+use NotificationChannels\ProdevelUK\AzureCommunicationServiceChannel;
+
+class SmsOnlyNotification extends Notification
+{
+    public function via($notifiable)
+    {
+        return [AzureCommunicationServiceChannel::class];
+    }
+
+    public function toSms($notifiable)
+    {
+        return [
+            'message' => 'Your verification code is: 123456'
+        ];
+    }
+}
+```
+
+### Advanced Usage
 
 ```php
 use Illuminate\Notifications\Notification;

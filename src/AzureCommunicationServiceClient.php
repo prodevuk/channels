@@ -166,6 +166,7 @@ class AzureCommunicationServiceClient
         
         return [
             'Authorization' => 'HMAC-SHA256 SignedHeaders=date;host;x-ms-content-sha256&Signature=' . $signature,
+            'Date' => $date,
             'x-ms-date' => $date,
             'x-ms-content-sha256' => $contentHash,
         ];

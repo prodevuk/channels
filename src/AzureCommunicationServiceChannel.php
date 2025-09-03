@@ -10,9 +10,9 @@ class AzureCommunicationServiceChannel
 {
     protected $client;
 
-    public function __construct(AzureCommunicationServiceClient $client = null)
+    public function __construct(AzureCommunicationServiceClient $client)
     {
-        $this->client = $client ?: app(AzureCommunicationServiceClient::class);
+        $this->client = $client;
     }
 
     /**
@@ -25,14 +25,32 @@ class AzureCommunicationServiceChannel
      */
     public function send($notifiable, Notification $notification)
     {
-        $message = $notification->toAzureCommunication($notifiable);
+        // Check if notification has toAzureCommunication method (combined email/SMS)
+        if (method_exists($notification, 'toAzureCommunication')) {
+            $message = $notification->toAzureCommunication($notifiable);
 
-        if (isset($message['email'])) {
-            $this->sendEmail($notifiable, $message['email']);
+            if (isset($message['email'])) {
+                $this->sendEmail($notifiable, $message['email']);
+            }
+
+            if (isset($message['sms'])) {
+                $this->sendSms($notifiable, $message['sms']);
+            }
         }
-
-        if (isset($message['sms'])) {
-            $this->sendSms($notifiable, $message['sms']);
+        // Check if notification has toEmail method (email only)
+        elseif (method_exists($notification, 'toEmail')) {
+            $emailData = $notification->toEmail($notifiable);
+            $this->sendEmail($notifiable, $emailData);
+        }
+        // Check if notification has toSms method (SMS only)
+        elseif (method_exists($notification, 'toSms')) {
+            $smsData = $notification->toSms($notifiable);
+            $this->sendSms($notifiable, $smsData);
+        }
+        else {
+            throw CouldNotSendNotification::invalidMessage(
+                'Notification must implement toAzureCommunication(), toEmail(), or toSms() method.'
+            );
         }
     }
 
@@ -49,7 +67,7 @@ class AzureCommunicationServiceChannel
         $recipientAddress = $notifiable->routeNotificationFor('mail', $notifiable);
 
         if (!$recipientAddress) {
-            throw CouldNotSendNotification::serviceRespondedWithAnError('No email address found for notifiable');
+            throw CouldNotSendNotification::invalidRecipient('email');
         }
 
         return $this->client->sendEmail($senderAddress, $recipientAddress, $emailData);
@@ -68,13 +86,13 @@ class AzureCommunicationServiceChannel
         $recipientNumber = $notifiable->routeNotificationFor('sms', $notifiable);
 
         if (!$recipientNumber) {
-            throw CouldNotSendNotification::serviceRespondedWithAnError('No phone number found for notifiable');
+            throw CouldNotSendNotification::invalidRecipient('SMS');
         }
 
         $message = $smsData['message'] ?? '';
         
         if (empty($message)) {
-            throw CouldNotSendNotification::serviceRespondedWithAnError('SMS message content is empty');
+            throw CouldNotSendNotification::invalidMessage('SMS message content is empty');
         }
 
         return $this->client->sendSms($senderNumber, $recipientNumber, $smsData);

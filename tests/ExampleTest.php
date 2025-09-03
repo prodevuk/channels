@@ -84,6 +84,46 @@ class ExampleTest extends TestCase
         
         $this->assertInstanceOf(\NotificationChannels\ProdevelUK\AzureCommunicationServiceChannel::class, $channel);
     }
+
+    /** @test */
+    public function it_provides_meaningful_exception_messages()
+    {
+        // Test service not configured exception
+        $exception = \NotificationChannels\ProdevelUK\Exceptions\CouldNotSendNotification::serviceNotConfigured('Test configuration error');
+        $this->assertEquals('Test configuration error', $exception->getMessage());
+
+        // Test invalid recipient exception
+        $exception = \NotificationChannels\ProdevelUK\Exceptions\CouldNotSendNotification::invalidRecipient('email', 'invalid-email');
+        $this->assertEquals('Invalid email recipient: invalid-email', $exception->getMessage());
+
+        // Test invalid message exception
+        $exception = \NotificationChannels\ProdevelUK\Exceptions\CouldNotSendNotification::invalidMessage('Test message error');
+        $this->assertEquals('Test message error', $exception->getMessage());
+
+        // Test authentication failed exception
+        $exception = \NotificationChannels\ProdevelUK\Exceptions\CouldNotSendNotification::authenticationFailed('Test auth error');
+        $this->assertEquals('Test auth error', $exception->getMessage());
+    }
+
+    /** @test */
+    public function it_supports_individual_toEmail_and_toSms_methods()
+    {
+        // Test email-only notification
+        $emailNotification = new EmailOnlyNotification();
+        $this->assertTrue(method_exists($emailNotification, 'toEmail'));
+        $this->assertFalse(method_exists($emailNotification, 'toSms'));
+        $this->assertFalse(method_exists($emailNotification, 'toAzureCommunication'));
+
+        // Test SMS-only notification
+        $smsNotification = new SmsOnlyNotification();
+        $this->assertTrue(method_exists($smsNotification, 'toSms'));
+        $this->assertFalse(method_exists($smsNotification, 'toEmail'));
+        $this->assertFalse(method_exists($smsNotification, 'toAzureCommunication'));
+
+        // Test combined notification
+        $combinedNotification = new TestNotification();
+        $this->assertTrue(method_exists($combinedNotification, 'toAzureCommunication'));
+    }
 }
 
 class TestNotification extends Notification
@@ -104,6 +144,38 @@ class TestNotification extends Notification
             'sms' => [
                 'message' => 'Test SMS message',
             ]
+        ];
+    }
+}
+
+class EmailOnlyNotification extends Notification
+{
+    public function via($notifiable)
+    {
+        return [AzureCommunicationServiceChannel::class];
+    }
+
+    public function toEmail($notifiable)
+    {
+        return [
+            'subject' => 'Email Only Subject',
+            'html' => '<h1>Email Only HTML</h1>',
+            'text' => 'Email Only Text',
+        ];
+    }
+}
+
+class SmsOnlyNotification extends Notification
+{
+    public function via($notifiable)
+    {
+        return [AzureCommunicationServiceChannel::class];
+    }
+
+    public function toSms($notifiable)
+    {
+        return [
+            'message' => 'SMS Only message',
         ];
     }
 }
