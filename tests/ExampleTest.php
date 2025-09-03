@@ -59,6 +59,31 @@ class ExampleTest extends TestCase
         // This test would require mocking the config
         $this->assertTrue(true);
     }
+
+    /** @test */
+    public function it_can_resolve_channel_from_service_container()
+    {
+        // Create a mock application container
+        $app = new \Illuminate\Container\Container();
+        
+        // Mock the config using a simple array
+        $app->instance('config', [
+            'azure-communication' => [
+                'connection_string' => 'endpoint=https://test.communication.azure.com/;accesskey=test-key',
+                'email_sender' => 'test@example.com',
+                'sms_sender' => '+1234567890'
+            ]
+        ]);
+
+        // Register the service provider
+        $provider = new \NotificationChannels\ProdevelUK\AzureCommunicationServiceServiceProvider($app);
+        $provider->register();
+
+        // Test that we can resolve the channel from the container
+        $channel = $app->make(\NotificationChannels\ProdevelUK\AzureCommunicationServiceChannel::class);
+        
+        $this->assertInstanceOf(\NotificationChannels\ProdevelUK\AzureCommunicationServiceChannel::class, $channel);
+    }
 }
 
 class TestNotification extends Notification

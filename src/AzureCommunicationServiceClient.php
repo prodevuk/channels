@@ -11,9 +11,9 @@ class AzureCommunicationServiceClient
     protected $endpoint;
     protected $accessKey;
 
-    public function __construct()
+    public function __construct($connectionString = null)
     {
-        $connectionString = Config::get('azure-communication.connection_string');
+        $connectionString = $connectionString ?: Config::get('azure-communication.connection_string');
         
         if (!$connectionString) {
             throw new \InvalidArgumentException('Azure Communication Service connection string is not configured.');

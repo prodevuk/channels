@@ -26,8 +26,12 @@ class AzureCommunicationServiceServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton(AzureCommunicationServiceClient::class, function () {
-            return new AzureCommunicationServiceClient();
+        $this->app->singleton(AzureCommunicationServiceClient::class, function ($app) {
+            $config = $app['config'];
+            $connectionString = is_array($config) 
+                ? $config['azure-communication']['connection_string'] ?? null
+                : $config->get('azure-communication.connection_string');
+            return new AzureCommunicationServiceClient($connectionString);
         });
 
         $this->app->singleton(AzureCommunicationServiceChannel::class);
