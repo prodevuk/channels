@@ -47,7 +47,7 @@ You can install the package via composer:
 composer require laravel-notification-channels/azure-communication-services
 ```
 
-**Note:** This package uses the Azure Communication Services REST API since Microsoft does not provide an official PHP SDK. The implementation uses Laravel's HTTP client for HTTP requests to the Azure Communication Services endpoints.
+**Note:** This package uses the Azure Communication Services REST API since Microsoft does not provide an official PHP SDK. The implementation uses Laravel's HTTP client with proper HMAC-SHA256 authentication as specified in the [Azure Communication Services API documentation](https://learn.microsoft.com/en-us/rest/api/communication/email/email/send?view=rest-communication-email-2023-03-31&tabs=HTTP).
 
 The service provider will automatically register itself.
 
